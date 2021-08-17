@@ -3,45 +3,9 @@
 from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
-DOCUMENTATION = r'''
----
-module: test
-
-short_description: This is my test module
-
-version_added: "1.0.0"
-
-description: This is my longer description explaining my test module.
-
-options:
-    src:
-        description: The path of the file to read.
-        required: true
-        type: str
-
-author:
-    - Zaeem Parker (@zp4rker)
-'''
-
-EXAMPLES = r'''
-- name: Read lines from /tmp/test.txt
-  zp4rker.inspec.test:
-    src: /tmp/test.txt
-'''
-
-RETURN = r'''
-lines:
-    description: The lines read from the file
-    type: list
-    returned: always
-    sample:
-        - line 1
-        - line 2
-        - line 3
-'''
-
 from ansible.module_utils.basic import AnsibleModule
-
+import os, json
+from json import JSONDecodeError
 
 def run_module():
     module_args = dict(
@@ -61,10 +25,15 @@ def run_module():
     if module.check_mode:
         module.exit_json(**result)
 
-    f = open(module.params['src'], 'r')
-    result['lines'] = f.read().split('\n')
+    try:
+        inspec_result = os.popen(f'inspec exec {module.params["src"]} --reporter json-min').read()
+        result['inspec'] = json.loads(inspec_result)
 
-    module.exit_json(**result)
+        module.exit_json(**result)
+    except JSONDecodeError:
+        module.fail_json(msg = f'Inspec did not run correctly. The error was: {inspec_result}')
+    except Exception as error:
+        module.fail_json(msg = f'Encountered an error: {error}')
 
 
 def main():
