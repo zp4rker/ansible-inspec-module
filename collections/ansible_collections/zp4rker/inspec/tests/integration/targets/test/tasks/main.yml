@@ -1,0 +1,4 @@
+---
+- name: Test module
+  test:
+    src: /tmp/test.txt

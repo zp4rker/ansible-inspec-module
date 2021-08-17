@@ -1,0 +1,12 @@
+---
+- name: Test playbook
+  hosts: localhost
+
+  tasks:
+    - name: Testing the module
+      zp4rker.inspec.test:
+        src: /tmp/test.txt
+      register: test_module
+
+    - debug:
+        var: test_module
