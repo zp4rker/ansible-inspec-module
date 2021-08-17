@@ -1,0 +1,12 @@
+namespace: zp4rker
+name: inspec
+version: 1.0.0
+
+readme: README.md
+
+authors:
+- Zaeem Parker <iam@zp4rker.com>
+
+description: Executing Inspec profiles from Ansible.
+
+repository: https://github.com/zp4rker/ansible-inspec
