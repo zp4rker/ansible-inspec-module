@@ -1,0 +1,4 @@
+---
+- name: Test module
+  inspec:
+    src: /root/profile
