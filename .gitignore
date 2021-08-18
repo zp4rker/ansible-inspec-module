@@ -1,5 +1,4 @@
 .DS_Store
 
-.idea/
-
 **/tests/output
+install_inspec.sh
