@@ -4,12 +4,19 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule
-import subprocess, os.path
+import subprocess, os
 from json import JSONDecodeError
 
 def run_module():
+    backend_options = ['ssh', 'winrm']
+
     module_args = dict(
-        src=dict(type = 'str', required = True)
+        src = dict(type = 'str', required = True),
+
+        backend = dict(type = 'str', required = False, default = 'ssh'),
+        host = dict(type = 'str', required = False),
+        username = dict(type = 'str', required = False),
+        password = dict(type = 'str', required = False, no_log = True),
     )
 
     result = dict(
@@ -28,6 +35,31 @@ def run_module():
     try:
         if not os.path.exists(module.params['src']):
             module.fail_json(msg = f'Could not find file or directory at: {module.params["src"]}')
+
+        if module.params['host'] is None:
+            command = f'inspec exec {module.params["src"]} --reporter json-min'
+        else:
+            if module.params['username'] is None:
+                module.fail_json(msg = 'username must be defined to run on a remote target!')
+            if module.params['backend'] not in backend_options:
+                module.fail_json(msg = 'Invalid backend type. Available options: ssh, winrm')
+            if os.environ.get('SSH_AUTH_SOCK') is None and module.params['password'] is None:
+                module.fail_json(msg = 'password must be defined to run on a remote target! Alternatively, you can use SSH_AUTH_SOCK.')
+
+            if os.environ.get('SSH_AUTH_SOCK') is None:
+                command = f'inspec exec -b {0} --host {1} --user {2} --password {3} {module.params["src"]} --reporter json-min'.format(
+                    module.params['backend'], 
+                    module.params['host'], 
+                    module.params['username'],
+                    module.params['password']
+                )
+            else:
+                command = f'inspec exec -b {0} --host {1} --user {2} {module.params["src"]} --reporter json-min'.format(
+                    module.params['backend'], 
+                    module.params['host'], 
+                    module.params['username']
+                )
+
 
         inspec_result = subprocess.run(f'inspec exec {module.params["src"]} --reporter json-min'.split(" "), text = True, capture_output = True)
 

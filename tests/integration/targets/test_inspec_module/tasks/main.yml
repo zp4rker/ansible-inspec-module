@@ -29,6 +29,18 @@
               - ansible_failed_result.msg is defined
               - ansible_failed_result.msg == "Some tests failed!"
 
+    - name: Failure case 3 - missing details for remote target
+      block:
+        - inspec:
+            src: /tmp/test_1.rb
+            host: 127.0.0.1
+      rescue:
+        - name: Failure case 3 - missing details for remote target
+          assert:
+            that:
+              - ansible_failed_result.msg is defined
+              - ansible_failed_result.msg == "username must be defined to run on a remote target!"
+
     - name: Success case
       block:
         - inspec:
