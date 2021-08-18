@@ -1,4 +1,46 @@
 ---
-- name: Test module
-  inspec:
-    src: /root/profile
+- name: Setup
+  include: setup.yml
+
+- name: Test cases
+  block:
+
+    - name: Failure case 1 - non-existent file
+      block:
+        - inspec:
+            src: "{{src}}"
+      rescue:
+        - name: Failure case 1 - non-existent file
+          assert:
+            that:
+              - ansible_failed_result.msg is defined
+              - 'ansible_failed_result.msg == "Could not find file or directory at: {{src}}"'
+      vars:
+        src: /tmp/fake.rb
+
+    - name: Failure case 2 - some inspec tests failed
+      block:
+        - inspec:
+            src: /tmp/test-profile
+      rescue:
+        - name: Failure case 2 - some inspec tests failed
+          assert:
+            that:
+              - ansible_failed_result.msg is defined
+              - ansible_failed_result.msg == "Some tests failed!"
+
+    - name: Success case
+      block:
+        - inspec:
+            src: /tmp/test_1.rb
+          register: results
+
+        - name: Success case
+          assert:
+            that:
+              - results.tests is defined
+              - results.tests|length == 1
+
+  always:
+    - name: Cleanup
+      include: cleanup.yml
