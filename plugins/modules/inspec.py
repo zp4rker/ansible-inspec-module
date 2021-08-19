@@ -37,24 +37,24 @@ def run_module():
         if not os.path.exists(module.params['src']):
             module.fail_json(msg = f'Could not find file or directory at: {module.params["src"]}')
 
-        if module.params['host'] is None:
+        if not module.params['host']:
             command = f'inspec exec {module.params["src"]} --reporter json-min'
         else:
-            if module.params['username'] is None:
+            if not module.params['username']:
                 module.fail_json(msg = 'username must be defined to run on a remote target!')
             if module.params['backend'] not in backend_options:
                 module.fail_json(msg = 'Invalid backend type. Available options: ssh, winrm')
-            if os.environ.get('SSH_AUTH_SOCK') is None and module.params['password'] is None and module.params['privkey'] is None:
+            if not os.environ.get('SSH_AUTH_SOCK') and not module.params['password'] and not module.params['privkey']:
                 module.fail_json(msg = 'password or privkey must be defined to run on a remote target! Alternatively, you can use SSH_AUTH_SOCK.')
 
-            if os.environ.get('SSH_AUTH_SOCK') is not None:
+            if os.environ.get('SSH_AUTH_SOCK'):
                 command = 'inspec exec -b {0} --host {1} --user {2} {3} --reporter json-min'.format(
                     module.params['backend'], 
                     module.params['host'], 
                     module.params['username'],
                     module.params['src']
                 )
-            elif module.params['privkey'] is not None:
+            elif module.params['privkey']:
                 command = 'inspec exec -b {0} --host {1} --user {2} -i {3} {4} --reporter json-min'.format(
                     module.params['backend'], 
                     module.params['host'], 
@@ -74,7 +74,7 @@ def run_module():
 
         inspec_result = subprocess.run(command.split(" "), text = True, capture_output = True)
 
-        if inspec_result.stderr is not None:
+        if inspec_result.stderr:
             if 'cannot execute without accepting the license' in inspec_result.stderr:
                 module.fail_json(msg = 'This module requires the Inspec license to be accepted.')
             elif "Don't understand inspec profile" in inspec_result.stderr:
