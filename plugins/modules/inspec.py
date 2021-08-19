@@ -17,6 +17,7 @@ def run_module():
         host = dict(type = 'str', required = False),
         username = dict(type = 'str', required = False),
         password = dict(type = 'str', required = False, no_log = True),
+        privkey = dict(type = 'str', required = False)
     )
 
     result = dict(
@@ -43,33 +44,43 @@ def run_module():
                 module.fail_json(msg = 'username must be defined to run on a remote target!')
             if module.params['backend'] not in backend_options:
                 module.fail_json(msg = 'Invalid backend type. Available options: ssh, winrm')
-            if os.environ.get('SSH_AUTH_SOCK') is None and module.params['password'] is None:
-                module.fail_json(msg = 'password must be defined to run on a remote target! Alternatively, you can use SSH_AUTH_SOCK.')
+            if os.environ.get('SSH_AUTH_SOCK') is None and module.params['password'] is None and module.params['privkey'] is None:
+                module.fail_json(msg = 'password or privkey must be defined to run on a remote target! Alternatively, you can use SSH_AUTH_SOCK.')
 
-            if os.environ.get('SSH_AUTH_SOCK') is None:
-                command = f'inspec exec -b {0} --host {1} --user {2} --password {3} {module.params["src"]} --reporter json-min'.format(
+            if os.environ.get('SSH_AUTH_SOCK') is not None:
+                command = 'inspec exec -b {0} --host {1} --user {2} {3} --reporter json-min'.format(
                     module.params['backend'], 
                     module.params['host'], 
                     module.params['username'],
-                    module.params['password']
+                    module.params['src']
                 )
-            else:
-                command = f'inspec exec -b {0} --host {1} --user {2} {module.params["src"]} --reporter json-min'.format(
+            elif module.params['privkey'] is not None:
+                command = 'inspec exec -b {0} --host {1} --user {2} -i {3} {4} --reporter json-min'.format(
                     module.params['backend'], 
                     module.params['host'], 
-                    module.params['username']
+                    module.params['username'],
+                    module.params['privkey'],
+                    module.params['src']
+                )
+            else:
+                command = 'inspec exec -b {0} --host {1} --user {2} --password {3} {4} --reporter json-min'.format(
+                    module.params['backend'], 
+                    module.params['host'], 
+                    module.params['username'],
+                    module.params['password'],
+                    module.params['src']
                 )
 
 
-        inspec_result = subprocess.run(f'inspec exec {module.params["src"]} --reporter json-min'.split(" "), text = True, capture_output = True)
+        inspec_result = subprocess.run(command.split(" "), text = True, capture_output = True)
 
         if inspec_result.stderr is not None:
             if 'cannot execute without accepting the license' in inspec_result.stderr:
-                module.fail_json(msg = 'This module requires the Inspec license to be accepted.')
+                module.fail_json(msg = 'This module requires the Inspec license to be accepted.', cmd = command)
             elif "Don't understand inspec profile" in inspec_result.stderr:
-                module.fail_json(msg = 'Inspec was unable to read the profile structure.')
+                module.fail_json(msg = 'Inspec was unable to read the profile structure.', cmd = command)
             elif 'Could not fetch inspec profile' in inspec_result.stderr:
-                module.fail_json(msg = 'Inspec was unable to read that profile or test.')
+                module.fail_json(msg = 'Inspec was unable to read that profile or test.', cmd = command)
 
         result['tests'] = module.from_json(inspec_result.stdout)['controls']
 
@@ -84,11 +95,11 @@ def run_module():
         else:
             module.exit_json(msg = 'All tests passed.', **result)
     except JSONDecodeError:
-        module.fail_json(msg = f'Inspec did not return correctly. The error was: {inspec_result.stderr}')
+        module.fail_json(msg = f'Inspec did not return correctly. The error was: {inspec_result.stderr}', cmd = command)
     except FileNotFoundError:
-        module.fail_json(msg = 'This module requires inspec to be installed on the host machine.')
+        module.fail_json(msg = 'This module requires inspec to be installed on the host machine.', cmd = command)
     except Exception as error:
-        module.fail_json(msg = f'Encountered an error: {error}')
+        module.fail_json(msg = f'Encountered an error: {error}', cmd = command)
 
 
 def main():

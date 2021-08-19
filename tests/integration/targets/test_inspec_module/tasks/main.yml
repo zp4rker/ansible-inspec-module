@@ -41,17 +41,33 @@
               - ansible_failed_result.msg is defined
               - ansible_failed_result.msg == "username must be defined to run on a remote target!"
 
-    - name: Success case
+    - name: Success case 1 - Local machine
       block:
         - inspec:
             src: /tmp/test_1.rb
           register: results
 
-        - name: Success case
+        - name: Success case 1 - Local machine
           assert:
             that:
               - results.tests is defined
               - results.tests|length == 1
+
+    - name: Success case 2 - Remote machine
+      block:
+        - inspec:
+            src: /tmp/test_1.rb
+            host: 127.0.0.1
+            username: root
+            password: password
+          register: results
+
+        - name: Success case 2 - Remote machine
+          assert:
+            that:
+              - results.tests is defined
+              - results.tests|length == 1
+
 
   always:
     - name: Cleanup
