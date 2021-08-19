@@ -10,7 +10,7 @@ Executing Inspec profiles from Ansible.
 ```yaml
 - name: Run inspec tests
   inspec:
-  	src: /path/to/profile
+    src: /path/to/profile
 ```
 
 ### Remote target
@@ -19,11 +19,11 @@ Executing Inspec profiles from Ansible.
 - name: Run inspec tests on remote target
   delegate_to: localhost
   inspec:
-  	src: /local/path/to/profile
-  	backend: ssh
-  	host: some.host.com
-  	username: root
-  	privkey: /path/to/privatekey
+    src: /local/path/to/profile
+    backend: ssh
+    host: some.host.com
+    username: root
+    privkey: /path/to/privatekey
 ```
 
 ### Options
