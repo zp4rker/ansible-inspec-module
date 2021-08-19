@@ -1,0 +1,79 @@
+---
+- name: Setup
+  include: setup.yml
+
+- name: Test cases
+  block:
+
+    - name: Failure case 1 - non-existent file
+      block:
+        - inspec:
+            src: "{{src}}"
+      rescue:
+        - name: Failure case 1 - non-existent file
+          assert:
+            that:
+              - ansible_failed_result.msg is defined
+              - 'ansible_failed_result.msg == "Could not find file or directory at: {{src}}"'
+      vars:
+        src: /tmp/fake.rb
+
+    - name: Failure case 2 - some inspec tests failed
+      block:
+        - inspec:
+            src: /tmp/test-profile
+      rescue:
+        - name: Failure case 2 - some inspec tests failed
+          assert:
+            that:
+              - ansible_failed_result.msg is defined
+              - ansible_failed_result.msg == "Some tests failed!"
+
+    - name: Failure case 3 - missing details for remote target
+      block:
+        - inspec:
+            src: /tmp/test_1.rb
+            host: 127.0.0.1
+      rescue:
+        - name: Failure case 3 - missing details for remote target
+          assert:
+            that:
+              - ansible_failed_result.msg is defined
+              - ansible_failed_result.msg == "username must be defined to run on a remote target!"
+
+    - name: Success case 1 - Local machine
+      block:
+        - inspec:
+            src: /tmp/test_1.rb
+          register: results
+
+        - name: Success case 1 - Local machine
+          assert:
+            that:
+              - results.tests is defined
+              - results.tests|length == 1
+
+    - name: Success case 2 - Remote machine
+      block:
+        - inspec:
+            src: /tmp/test_1.rb
+            host: 127.0.0.1
+            username: root
+            password: password
+          register: results
+
+        - name: Success case 2 - Remote machine
+          assert:
+            that:
+              - results.tests is defined
+              - results.tests|length == 1
+      rescue:
+        - debug:
+            msg: >
+              It is recommended to run these tests in a virtual machine.
+              Feel free to review the details of success case 2 and adjust to your environment.
+
+
+  always:
+    - name: Cleanup
+      include: cleanup.yml

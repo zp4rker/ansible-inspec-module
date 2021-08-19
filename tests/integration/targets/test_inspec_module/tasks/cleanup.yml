@@ -1,0 +1,15 @@
+---
+- name: Remove solo Inspec test file
+  file:
+    path: /tmp/test_1.rb
+    state: absent
+
+- name: Remove Inspec test profile
+  file:
+    path: /tmp/test-profile
+    state: absent
+
+- name: Remove /tmp/some_file.txt
+  file:
+    path: /tmp/some_file.txt
+    state: absent

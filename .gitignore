@@ -1,0 +1,4 @@
+.DS_Store
+
+**/tests/output
+install_inspec.sh

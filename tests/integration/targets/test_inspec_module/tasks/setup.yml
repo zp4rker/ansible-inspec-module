@@ -1,0 +1,15 @@
+---
+- name: Solo Inspec test file
+  copy:
+    src: test_1.rb
+    dest: /tmp/test_1.rb
+
+- name: Inspec test profile
+  copy:
+    src: test-profile
+    dest: /tmp/test-profile
+
+- name: Create file to be tested against
+  file:
+    path: /tmp/some_file.txt
+    state: touch
