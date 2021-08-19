@@ -76,11 +76,11 @@ def run_module():
 
         if inspec_result.stderr is not None:
             if 'cannot execute without accepting the license' in inspec_result.stderr:
-                module.fail_json(msg = 'This module requires the Inspec license to be accepted.', cmd = command)
+                module.fail_json(msg = 'This module requires the Inspec license to be accepted.')
             elif "Don't understand inspec profile" in inspec_result.stderr:
-                module.fail_json(msg = 'Inspec was unable to read the profile structure.', cmd = command)
+                module.fail_json(msg = 'Inspec was unable to read the profile structure.')
             elif 'Could not fetch inspec profile' in inspec_result.stderr:
-                module.fail_json(msg = 'Inspec was unable to read that profile or test.', cmd = command)
+                module.fail_json(msg = 'Inspec was unable to read that profile or test.')
 
         result['tests'] = module.from_json(inspec_result.stdout)['controls']
 
@@ -95,9 +95,9 @@ def run_module():
         else:
             module.exit_json(msg = 'All tests passed.', **result)
     except JSONDecodeError:
-        module.fail_json(msg = f'Inspec did not return correctly. The error was: {inspec_result.stderr}', cmd = command)
+        module.fail_json(msg = f'Inspec did not return correctly. The error was: {inspec_result.stderr}')
     except FileNotFoundError:
-        module.fail_json(msg = 'This module requires inspec to be installed on the host machine.', cmd = command)
+        module.fail_json(msg = 'This module requires inspec to be installed on the host machine.')
     except Exception as error:
         module.fail_json(msg = f'Encountered an error: {error}', cmd = command)
 

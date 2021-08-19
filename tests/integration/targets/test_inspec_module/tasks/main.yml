@@ -67,6 +67,11 @@
             that:
               - results.tests is defined
               - results.tests|length == 1
+      rescue:
+        - debug:
+            msg: >
+              It is recommended to run these tests in a virtual machine.
+              Feel free to review the details of success case 2 and adjust to your environment.
 
 
   always:
