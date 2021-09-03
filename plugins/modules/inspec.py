@@ -48,27 +48,27 @@ def run_module():
                 module.fail_json(msg = 'password or privkey must be defined to run on a remote target! Alternatively, you can use SSH_AUTH_SOCK.')
 
             if os.environ.get('SSH_AUTH_SOCK'):
-                command = 'inspec exec -b {0} --host {1} --user {2} {3} --reporter json-min'.format(
+                command = 'inspec exec {} -b {} --host {} --user {} --reporter json-min'.format(
+                    module.params['src'],
                     module.params['backend'], 
                     module.params['host'], 
-                    module.params['username'],
-                    module.params['src']
+                    module.params['username']
                 )
             elif module.params['privkey']:
-                command = 'inspec exec -b {0} --host {1} --user {2} -i {3} {4} --reporter json-min'.format(
+                command = 'inspec exec {} -b {} --host {} --user {} -i {} --reporter json-min'.format(
+                    module.params['src'],
                     module.params['backend'], 
                     module.params['host'], 
                     module.params['username'],
-                    module.params['privkey'],
-                    module.params['src']
+                    module.params['privkey']
                 )
             else:
-                command = 'inspec exec -b {0} --host {1} --user {2} --password {3} {4} --reporter json-min'.format(
+                command = 'inspec exec {} -b {} --host {} --user {} --password {} --reporter json-min'.format(
+                    module.params['src'],
                     module.params['backend'], 
                     module.params['host'], 
                     module.params['username'],
-                    module.params['password'],
-                    module.params['src']
+                    module.params['password']
                 )
 
 
