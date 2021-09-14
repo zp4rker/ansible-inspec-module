@@ -36,7 +36,7 @@ Executing Inspec profiles from Ansible.
 | username    | The username to use for remote targets.                                        | If running on a remote target. |         |
 | password    | The password to use for remote targets.                                        | If running on a remote target. |         |
 | privkey     | The path to the private key to use for remote targets. (SSH)                   | If running on a remote target. |         |
-| binary_path | The optional path to inspec or cinc-auditor binary         )                   | False                          |         |
+| binary_path | The optional path to inspec or cinc-auditor binary                             | False                          |         |
 
 
 ## Return
