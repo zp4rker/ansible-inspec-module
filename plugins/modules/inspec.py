@@ -18,7 +18,8 @@ def run_module():
         username = dict(type = 'str', required = False),
         password = dict(type = 'str', required = False, no_log = True),
         privkey = dict(type = 'str', required = False),
-        binary_path = dict(type = 'str', required = False)
+        binary_path = dict(type = 'str', required = False),
+        show_only_failed = dict(type = 'bool', required = False)
     )
 
     result = dict(
@@ -94,13 +95,18 @@ def run_module():
             elif 'Could not fetch inspec profile' in inspec_result.stderr:
                 module.fail_json(msg = 'Inspec was unable to read that profile or test.')
 
-        result['tests'] = module.from_json(inspec_result.stdout)['controls']
-
         failed = False
-        for test in result['tests']:
+
+        show_only_failed = module.params.get('show_only_failed')
+
+        for test in module.from_json(inspec_result.stdout)['controls']:
             if test['status'] == 'failed':
                 failed = True
-                break
+                if show_only_failed:
+                    result['tests'].append(test)
+                else:
+                    result['tests'] = module.from_json(inspec_result.stdout)['controls']
+                    break
 
         if failed:
             module.fail_json(msg = 'Some tests failed!', **result)

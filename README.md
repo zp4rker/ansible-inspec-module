@@ -28,15 +28,16 @@ Executing Inspec profiles from Ansible.
 
 ### Options
 
-| Option      | Description                                                                    | Required                       | Default |
-|-------------|--------------------------------------------------------------------------------|--------------------------------|---------|
-| src         | The path to the Inspec profile or test file.                                   | True                           |         |
-| backend     | The backend transport to use for remote targets. Available options: ssh, winrm | False                          | ssh     |
-| host        | The host to use for remote targets.                                            | If running on a remote target. |         |
-| username    | The username to use for remote targets.                                        | If running on a remote target. |         |
-| password    | The password to use for remote targets.                                        | If running on a remote target. |         |
-| privkey     | The path to the private key to use for remote targets. (SSH)                   | If running on a remote target. |         |
-| binary_path | The optional path to inspec or cinc-auditor binary                             | False                          |         |
+| Option           | Description                                                                    | Required                       | Default |
+|------------------|--------------------------------------------------------------------------------|--------------------------------|---------|
+| src              | The path to the Inspec profile or test file.                                   | True                           |         |
+| backend          | The backend transport to use for remote targets. Available options: ssh, winrm | False                          | ssh     |
+| host             | The host to use for remote targets.                                            | If running on a remote target. |         |
+| username         | The username to use for remote targets.                                        | If running on a remote target. |         |
+| password         | The password to use for remote targets.                                        | If running on a remote target. |         |
+| privkey          | The path to the private key to use for remote targets. (SSH)                   | If running on a remote target. |         |
+| binary_path      | The optional path to inspec or cinc-auditor binary                             | False                          |         |
+| show_only_failed | Show only failed tests                                                         | False                          |         |
 
 
 ## Return
