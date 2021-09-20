@@ -1,11 +1,13 @@
 #!/usr/bin/python
 
-from __future__ import (absolute_import, division, print_function)
+from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule
 import os
 from json import JSONDecodeError
+
 
 def run_module():
     module_args = dict(
@@ -19,33 +21,30 @@ def run_module():
         binary_path = dict(type = 'str', required = False)
     )
 
-    result = dict(
-        changed = False,
-        tests = []
-    )
+    result = dict(changed=False, tests=[])
 
-    module = AnsibleModule(
-        argument_spec = module_args,
-        supports_check_mode = True
-    )
+    module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
     if module.check_mode:
         module.exit_json(**result)
 
-    bin_path = module.params.get('binary_path')
+    bin_path = module.params.get("binary_path")
 
     if bin_path is not None:
         run_command = bin_path
     else:
-        run_command = module.get_bin_path('inspec', required=True)
-
+        run_command = module.get_bin_path("inspec", required=True)
 
     try:
-        if not os.path.exists(module.params['src']):
-            module.fail_json(msg = f'Could not find file or directory at: {module.params["src"]}')
+        if not os.path.exists(module.params["src"]):
+            module.fail_json(
+                msg=f'Could not find file or directory at: {module.params["src"]}'
+            )
 
-        if not module.params['host']:
-            command = f'{run_command} exec {module.params["src"]} --reporter json-min'
+        if not module.params["host"]:
+            command = (
+                f'{run_command} exec {module.params["src"]} --reporter json-min'
+            )
         else:
             if not module.params['username']:
                 module.fail_json(msg = 'username must be defined to run on a remote target!')
@@ -55,30 +54,29 @@ def run_module():
             if os.environ.get('SSH_AUTH_SOCK'):
                 command = '{} exec {} -b {} --host {} --user {} --reporter json-min'.format(
                     run_command,
-                    module.params['src'],
-                    module.params['backend'],
-                    module.params['host'],
-                    module.params['username']
+                    module.params["src"],
+                    module.params["backend"],
+                    module.params["host"],
+                    module.params["username"],
                 )
-            elif module.params['privkey']:
-                command = '{} exec {} -b {} --host {} --user {} -i {} --reporter json-min'.format(
+            elif module.params["privkey"]:
+                command = "{} exec {} -b {} --host {} --user {} -i {} --reporter json-min".format(
                     run_command,
-                    module.params['src'],
-                    module.params['backend'],
-                    module.params['host'],
-                    module.params['username'],
-                    module.params['privkey']
+                    module.params["src"],
+                    module.params["backend"],
+                    module.params["host"],
+                    module.params["username"],
+                    module.params["privkey"],
                 )
             else:
-                command = '{} exec {} -b {} --host {} --user {} --password {} --reporter json-min'.format(
+                command = "{} exec {} -b {} --host {} --user {} --password {} --reporter json-min".format(
                     run_command,
-                    module.params['src'],
-                    module.params['backend'],
-                    module.params['host'],
-                    module.params['username'],
-                    module.params['password']
+                    module.params["src"],
+                    module.params["backend"],
+                    module.params["host"],
+                    module.params["username"],
+                    module.params["password"],
                 )
-
 
         rc, stdout, stderr = module.run_command(command)
         # inspec_result = subprocess.run(command.split(" "), text = True, capture_output = True)
@@ -99,27 +97,29 @@ def run_module():
         result['tests'] = module.from_json(stdout)['controls']
 
         failed = False
-        for test in result['tests']:
-            if test['status'] == 'failed':
+        for test in result["tests"]:
+            if test["status"] == "failed":
                 failed = True
                 break
 
         if failed:
-            module.fail_json(msg = 'Some tests failed!', **result)
+            module.fail_json(msg="Some tests failed!", **result)
         else:
-            module.exit_json(msg = 'All tests passed.', **result)
+            module.exit_json(msg="All tests passed.", **result)
     except JSONDecodeError:
         # module.fail_json(msg = f'Inspec did not return correctly. The error was: {inspec_result.stderr}')
         module.fail_json(msg = f'Inspec did not return correctly. The error was: {stderr}')
     except FileNotFoundError:
-        module.fail_json(msg = f'This module requires inspec to be installed on the host machine. Searched here: {run_command}')
+        module.fail_json(
+            msg=f"This module requires inspec to be installed on the host machine. Searched here: {run_command}"
+        )
     except Exception as error:
-        module.fail_json(msg = f'Encountered an error: {error}', cmd = command)
+        module.fail_json(msg=f"Encountered an error: {error}", cmd=command)
 
 
 def main():
     run_module()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
