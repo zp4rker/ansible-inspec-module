@@ -11,14 +11,15 @@ from json import JSONDecodeError
 
 def run_module():
     module_args = dict(
-        src = dict(type = 'str', required = True),
-
-        backend = dict(type = 'str', required = False, default = 'ssh', choices = ['ssh', 'winrm']),
-        host = dict(type = 'str', required = False),
-        username = dict(type = 'str', required = False),
-        password = dict(type = 'str', required = False, no_log = True),
-        privkey = dict(type = 'str', required = False),
-        binary_path = dict(type = 'str', required = False)
+        src=dict(type="str", required=True),
+        backend=dict(
+            type="str", required=False, default="ssh", choices=["ssh", "winrm"]
+        ),
+        host=dict(type="str", required=False),
+        username=dict(type="str", required=False),
+        password=dict(type="str", required=False, no_log=True),
+        privkey=dict(type="str", required=False),
+        binary_path=dict(type="str", required=False),
     )
 
     result = dict(changed=False, tests=[])
@@ -46,13 +47,21 @@ def run_module():
                 f'{run_command} exec {module.params["src"]} --reporter json-min'
             )
         else:
-            if not module.params['username']:
-                module.fail_json(msg = 'username must be defined to run on a remote target!')
-            if not os.environ.get('SSH_AUTH_SOCK') and not module.params['password'] and not module.params['privkey']:
-                module.fail_json(msg = 'password or privkey must be defined to run on a remote target! Alternatively, you can use SSH_AUTH_SOCK.')
+            if not module.params["username"]:
+                module.fail_json(
+                    msg="username must be defined to run on a remote target!"
+                )
+            if (
+                not os.environ.get("SSH_AUTH_SOCK")
+                and not module.params["password"]
+                and not module.params["privkey"]
+            ):
+                module.fail_json(
+                    msg="password or privkey must be defined to run on a remote target! Alternatively, you can use SSH_AUTH_SOCK."
+                )
 
-            if os.environ.get('SSH_AUTH_SOCK'):
-                command = '{} exec {} -b {} --host {} --user {} --reporter json-min'.format(
+            if os.environ.get("SSH_AUTH_SOCK"):
+                command = "{} exec {} -b {} --host {} --user {} --reporter json-min".format(
                     run_command,
                     module.params["src"],
                     module.params["backend"],
@@ -78,24 +87,29 @@ def run_module():
                     module.params["password"],
                 )
 
-
         rc, stdout, stderr = module.run_command(command)
         # inspec_result = subprocess.run(command.split(" "), text = True, capture_output = True)
 
         # if inspec_result.stderr:
         if stderr:
             # if 'cannot execute without accepting the license' in inspec_result.stderr:
-            if 'cannot execute without accepting the license' in stderr:
-                module.fail_json(msg = 'This module requires the Inspec license to be accepted.')
+            if "cannot execute without accepting the license" in stderr:
+                module.fail_json(
+                    msg="This module requires the Inspec license to be accepted."
+                )
             # elif "Don't understand inspec profile" in inspec_result.stderr:
             elif "Don't understand inspec profile" in stderr:
-                module.fail_json(msg = 'Inspec was unable to read the profile structure.')
+                module.fail_json(
+                    msg="Inspec was unable to read the profile structure."
+                )
             # elif 'Could not fetch inspec profile' in inspec_result.stderr:
-        elif 'Could not fetch inspec profile' in stderr:
-                module.fail_json(msg = 'Inspec was unable to read that profile or test.')
+        elif "Could not fetch inspec profile" in stderr:
+            module.fail_json(
+                msg="Inspec was unable to read that profile or test."
+            )
 
         # result['tests'] = module.from_json(inspec_result.stdout)['controls']
-        result['tests'] = module.from_json(stdout)['controls']
+        result["tests"] = module.from_json(stdout)["controls"]
 
         failed = False
         for test in result["tests"]:
@@ -109,7 +123,9 @@ def run_module():
             module.exit_json(msg="All tests passed.", **result)
     except JSONDecodeError:
         # module.fail_json(msg = f'Inspec did not return correctly. The error was: {inspec_result.stderr}')
-        module.fail_json(msg = f'Inspec did not return correctly. The error was: {stderr}')
+        module.fail_json(
+            msg=f"Inspec did not return correctly. The error was: {stderr}"
+        )
     except FileNotFoundError:
         module.fail_json(
             msg=f"This module requires inspec to be installed on the host machine. Searched here: {run_command}"
