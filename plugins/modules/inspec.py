@@ -4,16 +4,14 @@ from __future__ import (absolute_import, division, print_function)
 __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule
-import subprocess, os
+import os
 from json import JSONDecodeError
 
 def run_module():
-    backend_options = ['ssh', 'winrm']
-
     module_args = dict(
         src = dict(type = 'str', required = True),
 
-        backend = dict(type = 'str', required = False, default = 'ssh'),
+        backend = dict(type = 'str', required = False, default = 'ssh', choices = ['ssh', 'winrm']),
         host = dict(type = 'str', required = False),
         username = dict(type = 'str', required = False),
         password = dict(type = 'str', required = False, no_log = True),
@@ -51,8 +49,6 @@ def run_module():
         else:
             if not module.params['username']:
                 module.fail_json(msg = 'username must be defined to run on a remote target!')
-            if module.params['backend'] not in backend_options:
-                module.fail_json(msg = 'Invalid backend type. Available options: ssh, winrm')
             if not os.environ.get('SSH_AUTH_SOCK') and not module.params['password'] and not module.params['privkey']:
                 module.fail_json(msg = 'password or privkey must be defined to run on a remote target! Alternatively, you can use SSH_AUTH_SOCK.')
 
@@ -84,17 +80,23 @@ def run_module():
                 )
 
 
-        inspec_result = subprocess.run(command.split(" "), text = True, capture_output = True)
+        rc, stdout, stderr = module.run_command(command)
+        # inspec_result = subprocess.run(command.split(" "), text = True, capture_output = True)
 
-        if inspec_result.stderr:
-            if 'cannot execute without accepting the license' in inspec_result.stderr:
+        # if inspec_result.stderr:
+        if stderr:
+            # if 'cannot execute without accepting the license' in inspec_result.stderr:
+            if 'cannot execute without accepting the license' in stderr:
                 module.fail_json(msg = 'This module requires the Inspec license to be accepted.')
-            elif "Don't understand inspec profile" in inspec_result.stderr:
+            # elif "Don't understand inspec profile" in inspec_result.stderr:
+            elif "Don't understand inspec profile" in stderr:
                 module.fail_json(msg = 'Inspec was unable to read the profile structure.')
-            elif 'Could not fetch inspec profile' in inspec_result.stderr:
+            # elif 'Could not fetch inspec profile' in inspec_result.stderr:
+        elif 'Could not fetch inspec profile' in stderr:
                 module.fail_json(msg = 'Inspec was unable to read that profile or test.')
 
-        result['tests'] = module.from_json(inspec_result.stdout)['controls']
+        # result['tests'] = module.from_json(inspec_result.stdout)['controls']
+        result['tests'] = module.from_json(stdout)['controls']
 
         failed = False
         for test in result['tests']:
@@ -107,7 +109,8 @@ def run_module():
         else:
             module.exit_json(msg = 'All tests passed.', **result)
     except JSONDecodeError:
-        module.fail_json(msg = f'Inspec did not return correctly. The error was: {inspec_result.stderr}')
+        # module.fail_json(msg = f'Inspec did not return correctly. The error was: {inspec_result.stderr}')
+        module.fail_json(msg = f'Inspec did not return correctly. The error was: {stderr}')
     except FileNotFoundError:
         module.fail_json(msg = f'This module requires inspec to be installed on the host machine. Searched here: {run_command}')
     except Exception as error:
