@@ -58,9 +58,10 @@ jobs:
     strategy:
       matrix:
         python:
-          - 2.7
+          - 3.6
           - 3.7
           - 3.8
+          - 3.9
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -92,8 +93,6 @@ jobs:
           - stable-2.11
           - devel
         python:
-          - 2.7
-          - 3.5
           - 3.6
           - 3.7
           - 3.8
@@ -118,6 +117,9 @@ jobs:
 
       - name: Install ansible-base (${{ matrix.ansible }})
         run: pip install https://github.com/ansible/ansible/archive/${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+
+      - name: Install cinc-auditor
+        run: curl -L https://omnitruck.cinc.sh/install.sh | sudo bash -s -- -P cinc-auditor -v 4
 
       - name: Run integration tests
         run: ansible-test integration -v --color --retry-on-error --continue-on-error --diff --python ${{ matrix.python }} --requirements --coverage

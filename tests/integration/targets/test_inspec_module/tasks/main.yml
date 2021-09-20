@@ -9,6 +9,7 @@
       block:
         - inspec:
             src: "{{src}}"
+            binary_path: "/usr/bin/cinc-auditor"
       rescue:
         - name: Failure case 1 - non-existent file
           assert:
@@ -22,6 +23,7 @@
       block:
         - inspec:
             src: /tmp/test-profile
+            binary_path: "/usr/bin/cinc-auditor"
       rescue:
         - name: Failure case 2 - some inspec tests failed
           assert:
@@ -34,6 +36,7 @@
         - inspec:
             src: /tmp/test_1.rb
             host: 127.0.0.1
+            binary_path: "/usr/bin/cinc-auditor"
       rescue:
         - name: Failure case 3 - missing details for remote target
           assert:
@@ -45,6 +48,7 @@
       block:
         - inspec:
             src: /tmp/test_1.rb
+            binary_path: "/usr/bin/cinc-auditor"
           register: results
 
         - name: Success case 1 - Local machine
@@ -60,6 +64,7 @@
             host: 127.0.0.1
             username: root
             password: password
+            binary_path: "/usr/bin/cinc-auditor"
           register: results
 
         - name: Success case 2 - Remote machine
