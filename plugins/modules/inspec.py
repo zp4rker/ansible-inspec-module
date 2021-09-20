@@ -4,6 +4,65 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+DOCUMENTATION = """
+---
+module: inspec
+short_description: Execute Inspec-profiles
+description:
+   - Execute Inspec-profiles
+author: zp4rker (@zp4rker)
+notes:
+  - This module supports check mode.
+options:
+  src:
+    description:
+      - The path to the Inspec profile or test file
+    required: true
+    type: str
+  backend:
+    description:
+      - The backend transport to use for remote targets
+    required: false
+    type: str
+    choices: ["ssh", "winrm"]
+    default: "ssh"
+  host:
+    description:
+      - The host to use for remote targets
+    type: str
+  username:
+    description:
+      - The username to use for remote targets
+    type: str
+  password:
+    description:
+      - The password to use for remote targets
+    type: str
+  privkey:
+    description:
+      - The path to the private key to use for remote targets (SSH)
+    type: str
+  binary_path:
+    description:
+      - The optional path to inspec or cinc-auditor binary
+    type: str
+"""
+
+EXAMPLES = """
+- name: Run inspec tests
+  inspec:
+    src: /path/to/profile
+
+- name: Run inspec tests on remote target
+  delegate_to: localhost
+  inspec:
+    src: /local/path/to/profile
+    backend: ssh
+    host: some.host.com
+    username: root
+    privkey: /path/to/privatekey
+"""
+
 from ansible.module_utils.basic import AnsibleModule
 import os
 from json import JSONDecodeError
@@ -18,7 +77,7 @@ def run_module():
         host=dict(type="str", required=False),
         username=dict(type="str", required=False),
         password=dict(type="str", required=False, no_log=True),
-        privkey=dict(type="str", required=False),
+        privkey=dict(type="str", required=False, no_log=True),
         binary_path=dict(type="str", required=False),
     )
 
@@ -61,7 +120,7 @@ def run_module():
                 )
 
             if os.environ.get("SSH_AUTH_SOCK"):
-                command = "{} exec {} -b {} --host {} --user {} --reporter json-min".format(
+                command = "{0} exec {1} -b {2} --host {3} --user {4} --reporter json-min".format(
                     run_command,
                     module.params["src"],
                     module.params["backend"],
@@ -69,7 +128,7 @@ def run_module():
                     module.params["username"],
                 )
             elif module.params["privkey"]:
-                command = "{} exec {} -b {} --host {} --user {} -i {} --reporter json-min".format(
+                command = "{0} exec {1} -b {2} --host {3} --user {4} -i {5} --reporter json-min".format(
                     run_command,
                     module.params["src"],
                     module.params["backend"],
@@ -78,7 +137,7 @@ def run_module():
                     module.params["privkey"],
                 )
             else:
-                command = "{} exec {} -b {} --host {} --user {} --password {} --reporter json-min".format(
+                command = "{0} exec {1} -b {2} --host {3} --user {4} --password {5} --reporter json-min".format(
                     run_command,
                     module.params["src"],
                     module.params["backend"],
