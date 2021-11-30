@@ -67,7 +67,7 @@ def run_module():
                     module.params['backend'],
                     module.params['host'],
                     module.params['username'],
-                    module.params['controls']
+                    controls
                 )
             elif module.params['privkey']:
                 command = '{} exec {} -b {} --host {} --user {} -i {} --controls {} --reporter json-min'.format(
@@ -77,7 +77,7 @@ def run_module():
                     module.params['host'],
                     module.params['username'],
                     module.params['privkey'],
-                    module.params['controls']
+                    controls
                 )
             else:
                 command = '{} exec {} -b {} --host {} --user {} --password {} --controls {} --reporter json-min'.format(
@@ -87,7 +87,8 @@ def run_module():
                     module.params['host'],
                     module.params['username'],
                     module.params['password'],
-                    module.params['controls']
+                    controls
+                )
                 )
 
 
