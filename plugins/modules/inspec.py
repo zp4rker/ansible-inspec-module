@@ -89,8 +89,6 @@ def run_module():
                     module.params['password'],
                     controls
                 )
-                )
-
 
         rc, stdout, stderr = module.run_command(command)
         # inspec_result = subprocess.run(command.split(" "), text = True, capture_output = True)
