@@ -16,7 +16,8 @@ def run_module():
         username = dict(type = 'str', required = False),
         password = dict(type = 'str', required = False, no_log = True),
         privkey = dict(type = 'str', required = False),
-        binary_path = dict(type = 'str', required = False)
+        binary_path = dict(type = 'str', required = False),
+        controls = dict(type = 'list', required = False)
     )
 
     result = dict(
@@ -39,13 +40,20 @@ def run_module():
     else:
         run_command = module.get_bin_path('inspec', required=True)
 
+    controls = module.params.get('controls')
+
+    # if no controls are defined, use a regex to match all controls
+    if not controls:
+        controls = "/.*/"
+    else:
+        controls = " ".join(map(str,controls))
 
     try:
         if not os.path.exists(module.params['src']):
             module.fail_json(msg = f'Could not find file or directory at: {module.params["src"]}')
 
         if not module.params['host']:
-            command = f'{run_command} exec {module.params["src"]} --reporter json-min'
+            command = f'{run_command} exec {module.params["src"]} --controls {controls} --reporter json-min'
         else:
             if not module.params['username']:
                 module.fail_json(msg = 'username must be defined to run on a remote target!')
@@ -53,32 +61,34 @@ def run_module():
                 module.fail_json(msg = 'password or privkey must be defined to run on a remote target! Alternatively, you can use SSH_AUTH_SOCK.')
 
             if os.environ.get('SSH_AUTH_SOCK'):
-                command = '{} exec {} -b {} --host {} --user {} --reporter json-min'.format(
+                command = '{} exec {} -b {} --host {} --user {} --controls {} --reporter json-min'.format(
                     run_command,
                     module.params['src'],
                     module.params['backend'],
                     module.params['host'],
-                    module.params['username']
+                    module.params['username'],
+                    controls
                 )
             elif module.params['privkey']:
-                command = '{} exec {} -b {} --host {} --user {} -i {} --reporter json-min'.format(
+                command = '{} exec {} -b {} --host {} --user {} -i {} --controls {} --reporter json-min'.format(
                     run_command,
                     module.params['src'],
                     module.params['backend'],
                     module.params['host'],
                     module.params['username'],
-                    module.params['privkey']
+                    module.params['privkey'],
+                    controls
                 )
             else:
-                command = '{} exec {} -b {} --host {} --user {} --password {} --reporter json-min'.format(
+                command = '{} exec {} -b {} --host {} --user {} --password {} --controls {} --reporter json-min'.format(
                     run_command,
                     module.params['src'],
                     module.params['backend'],
                     module.params['host'],
                     module.params['username'],
-                    module.params['password']
+                    module.params['password'],
+                    controls
                 )
-
 
         rc, stdout, stderr = module.run_command(command)
         # inspec_result = subprocess.run(command.split(" "), text = True, capture_output = True)
